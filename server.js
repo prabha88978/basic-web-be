@@ -24,11 +24,21 @@ app.get('/db-setup', async (req, res) => {
     }
 })
 
-app.post('/signup', (req, res) => {
+app.post('/signup', async (req, res) => {
     console.log("Coming here?")
     const { fullname, username, email, password } = req.body;
     console.log(fullname, username, email, password);
-    res.status(200).json({ status_code: 201, message: "Success" })
+    try {
+        const insertQuery = 'INSERT INTO users (fullname,username,email,password) VALUES($1,$2,$3,$4)';
+        const values = [fullname, username, email, password];
+        const result = await pool.query(insertQuery, values);
+        if (result.rows.length > 0)
+            res.status(201).json({ status_code: 201, message: 'Data stored successfully', data: result.rows[0] });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Unable to save user info to database' });
+    }
+    // res.status(200).json({ status_code: 201, message: "Success" })
 });
 
 // Start the server
