@@ -41,6 +41,25 @@ app.post('/signup', async (req, res) => {
     // res.status(200).json({ status_code: 201, message: "Success" })
 });
 
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+    console.log(username, password);
+    try {
+        const selectQuery = 'SELECT * FROM users WHERE username=$1 and password = $2';
+        const values = [username, password];
+        const response = await pool.query(selectQuery, values);
+        if (response.rows.length > 0) {
+            res.status(201).json({ status_code: 201, message: 'Data stored successfully', data: response.rows[0] });
+        }
+        else {
+            res.status(401).json({ status_code: 401, error: 'Invalid credentials' });
+        }
+    } catch (error) {
+        console.error('Error executing query:', error);
+        res.status(500).json({ status_code: 500, error: 'Internal server error' });
+    }
+});
+
 // Start the server
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
