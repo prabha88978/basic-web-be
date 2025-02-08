@@ -1,5 +1,6 @@
 import express from 'express'
 import pool from './db.js'
+import cors from 'cors'
 
 const app = express();
 const port = 3020;
@@ -7,10 +8,20 @@ const port = 3020;
 // Middleware to parse JSON bodies
 app.use(express.json());
 
+const corsOptions = {
+    origin: '*',
+    credentials: true,            //access-control-allow-credentials:true
+    optionSuccessStatus: 200,
+}
+
+app.use(cors(corsOptions))
+
 // Route to test the server
 app.get('/', (req, res) => {
     res.send('Hello World!');
 });
+
+
 
 app.get('/db-setup', async (req, res) => {
     try {
@@ -32,8 +43,7 @@ app.post('/signup', async (req, res) => {
         const insertQuery = 'INSERT INTO users (fullname,username,email,password) VALUES($1,$2,$3,$4)';
         const values = [fullname, username, email, password];
         const result = await pool.query(insertQuery, values);
-        if (result.rows.length > 0)
-            res.status(201).json({ status_code: 201, message: 'Data stored successfully', data: result.rows[0] });
+        res.status(201).json({ status_code: 201, message: 'Data stored successfully', data: result.rows[0] });
     }
     catch (error) {
         res.status(500).json({ message: 'Unable to save user info to database' });
@@ -43,13 +53,14 @@ app.post('/signup', async (req, res) => {
 
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
+    console.log("inside the login.... BE");
     console.log(username, password);
     try {
         const selectQuery = 'SELECT * FROM users WHERE username=$1 and password = $2';
         const values = [username, password];
         const response = await pool.query(selectQuery, values);
         if (response.rows.length > 0) {
-            res.status(201).json({ status_code: 201, message: 'Data stored successfully', data: response.rows[0] });
+            res.status(201).json({ status_code: 200, message: 'Login successful', data: response.rows[0] });
         }
         else {
             res.status(401).json({ status_code: 401, error: 'Invalid credentials' });
